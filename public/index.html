@@ -2,98 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Chat App</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-
-    #chat {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      border-bottom: 1px solid #ccc;
-    }
-
-    #chat p {
-      margin: 5px 0;
-    }
-
-    #form {
-      display: flex;
-      padding: 10px;
-      background: #f1f1f1;
-    }
-
-    #input {
-      flex: 1;
-      padding: 10px;
-      font-size: 16px;
-    }
-
-    #sendBtn {
-      padding: 10px 15px;
-      font-size: 16px;
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    #sendBtn:hover {
-      background-color: #2563eb;
-    }
+    body { font-family: Arial; padding: 20px; }
+    #messages { list-style: none; padding: 0; }
+    #messages li { padding: 5px 10px; border-bottom: 1px solid #ddd; }
+    #messageForm { display: flex; gap: 10px; margin-top: 10px; }
   </style>
 </head>
 <body>
-
-  <div id="chat"></div>
-
-  <form id="form">
-    <input id="input" autocomplete="off" placeholder="Type your message..." />
-    <button type="submit" id="sendBtn">Send</button>
+  <h1>Chat App</h1>
+  <ul id="messages"></ul>
+  <form id="messageForm">
+    <input id="messageInput" autocomplete="off" placeholder="Type your message..." required />
+    <button>Send</button>
   </form>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
 
-    const chat = document.getElementById('chat');
-    const form = document.getElementById('form');
-    const input = document.getElementById('input');
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const messagesList = document.getElementById('messages');
 
-    // Load old messages
-    socket.on('previousMessages', (messages) => {
-      messages.forEach(msg => {
-        appendMessage(`${msg.username || "Anonymous"}: ${msg.message}`);
-      });
+    // Display a message in the list
+    function addMessage(msg) {
+      const li = document.createElement('li');
+      li.textContent = `[${new Date(msg.timestamp).toLocaleTimeString()}] ${msg.username}: ${msg.message}`;
+      messagesList.appendChild(li);
+    }
+
+    // Load previous messages
+    socket.on('previousMessages', msgs => {
+      msgs.forEach(addMessage);
     });
 
-    // Listen for new chat messages
-    socket.on('chatMessage', (msg) => {
-      appendMessage(`${msg.username || "Anonymous"}: ${msg.message}`);
-    });
+    // Listen for incoming messages
+    socket.on('chatMessage', addMessage);
 
-    form.addEventListener('submit', (e) => {
+    // Send message
+    messageForm.addEventListener('submit', e => {
       e.preventDefault();
-      if (input.value.trim()) {
-        socket.emit('chatMessage', input.value.trim());
-        input.value = '';
+      if (messageInput.value.trim()) {
+        socket.emit('chatMessage', messageInput.value.trim());
+        messageInput.value = '';
       }
     });
-
-    function appendMessage(message) {
-      const msgEl = document.createElement('p');
-      msgEl.textContent = message;
-      chat.appendChild(msgEl);
-      chat.scrollTop = chat.scrollHeight;
-    }
   </script>
 </body>
 </html>
