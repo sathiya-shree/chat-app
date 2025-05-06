@@ -1,23 +1,22 @@
-require('dotenv').config();  // Add this line to load environment variables
-
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const Message = require('./models/Message');
 const path = require('path');
+require('dotenv').config();  // Add this to load environment variables
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// MongoDB Atlas connection using environment variable
+// MongoDB connection (Using environment variable MONGO_URI)
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log("✅ MongoDB connected"))
-.catch(err => console.error("MongoDB connection error:", err));
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error("MongoDB connection error:", err));
 
 // Serve static files from 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
