@@ -46,7 +46,6 @@ io.on('connection', socket => {
     console.log('🔴 A user disconnected');
   });
 });
-
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
