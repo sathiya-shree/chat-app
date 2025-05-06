@@ -1,57 +1,40 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const mongoose = require('mongoose');
-const Message = require('./models/Message');
-const path = require('path');
-require('dotenv').config();  // Add this to load environment variables
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Log the loaded MONGO_URI to check if it's correct
-console.log("✅ Loaded MONGO_URI:", process.env.MONGO_URI);
+// Store messages in memory (for simplicity, use a database in production)
+let messages = [];
 
-// MongoDB connection (Using environment variable MONGO_URI)
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("MongoDB connection error:", err));
+// Serve static files (e.g., HTML, CSS)
+app.use(express.static('public'));
 
-// Serve static files from 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Handle socket connections
+io.on('connection', (socket) => {
+  console.log('A user connected');
 
-// Socket.io connection
-io.on('connection', socket => {
-  console.log('🟢 A user connected');
-
-  // Send last 50 messages to new user
-  Message.find().sort({ timestamp: 1 }).limit(50).then(messages => {
-    socket.emit('previousMessages', messages);
-  });
+  // Send previous messages to the new user
+  socket.emit('previousMessages', messages);
 
   // Listen for new messages
-  socket.on('chatMessage', async (msgText) => {
-    const message = new Message({
-      username: 'Anonymous', // static for now
-      message: msgText,
-      timestamp: new Date()
-    });
-    await message.save();
-
-    io.emit('chatMessage', message); // broadcast to all
+  socket.on('chatMessage', (msg) => {
+    // Add message to message history
+    messages.push(msg);
+    // Emit message to all users
+    io.emit('chatMessage', msg);
   });
 
+  // Handle disconnect event
   socket.on('disconnect', () => {
-    console.log('🔴 A user disconnected');
+    console.log('A user disconnected');
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+// Start the server
+const port = 3000;
+server.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
