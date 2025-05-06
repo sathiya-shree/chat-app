@@ -10,6 +10,9 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+// Log the loaded MONGO_URI to check if it's correct
+console.log("✅ Loaded MONGO_URI:", process.env.MONGO_URI);
+
 // MongoDB connection (Using environment variable MONGO_URI)
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -46,6 +49,7 @@ io.on('connection', socket => {
     console.log('🔴 A user disconnected');
   });
 });
+
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
