@@ -1,3 +1,5 @@
+require('dotenv').config();  // Add this line to load environment variables
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -9,8 +11,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// MongoDB Atlas connection
-mongoose.connect('mongodb+srv://sathiyashree03:Shree%4003@chatappcluster.jfenyhb.mongodb.net/chatapp?retryWrites=true&w=majority&appName=ChatAppCluster', {
+// MongoDB Atlas connection using environment variable
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
